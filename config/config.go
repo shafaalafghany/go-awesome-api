@@ -13,6 +13,10 @@ type Config struct {
 	DbUsername                        string `mapstructure:"DB_USERNAME"`
 	DbPassword                        string `mapstructure:"DB_PASSWORD"`
 	DbName                            string `mapstructure:"DB_NAME"`
+	MailHost                          string `mapstructure:"MAIL_HOST"`
+	MailPort                          int    `mapstructure:"MAIL_PORT"`
+	MailUsername                      string `mapstructure:"MAIL_USERNAME"`
+	MailPassword                      string `mapstructure:"MAIL_PASSWORD"`
 	LoggerLevel                       string `mapstructure:"LOGGER_LEVEL"`
 	LoggerOutput                      string `mapstructure:"stdout"`
 	TokenAccessExpirationMinute       int    `mapstructure:"TOKEN_ACCESS_EXPIRATION_MINUTE"`
