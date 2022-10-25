@@ -4,11 +4,13 @@ import (
 	"awesome-api/api"
 	"awesome-api/config"
 	"awesome-api/logger"
+	mailer "awesome-api/mail"
 	"awesome-api/store"
 	"context"
 	"database/sql"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/rs/zerolog"
 )
@@ -35,6 +37,22 @@ func main() {
 	apiDB := api.DB{
 		ElibraryPostgres: db,
 	}
+	mailer := setupMail(config)
+	tokenVerification := api.TokenVerificationConfig{
+		Expiry: time.Duration(config.TokenVerificationExpirationMinute),
+	}
+	apiLogger := zlog.With().
+		Str("component", "api").
+		Logger()
+
+	srv := api.NewServer(
+		fmt.Sprintf("%s:%d", config.AppHost, config.AppPort),
+		apiLogger,
+		apiDB,
+		tokenVerification,
+		mailer,
+	)
+	srv.Run(ctx)
 }
 
 func setupPg(cfg config.Config, logger zerolog.Logger) *sql.DB {
@@ -49,4 +67,15 @@ func setupPg(cfg config.Config, logger zerolog.Logger) *sql.DB {
 		return nil
 	}
 	return db
+}
+
+func setupMail(cfg config.Config) mailer.EmailSender {
+	mailerConfig := &mailer.Config{
+		AppUrl:       fmt.Sprintf("%s://%s:%d", cfg.AppProtocol, cfg.AppHost, cfg.AppPort),
+		MailHost:     cfg.MailHost,
+		MailPort:     cfg.MailPort,
+		MailUsername: cfg.MailUsername,
+		MailPassword: cfg.MailPassword,
+	}
+	return mailer.NewMail(mailerConfig)
 }
