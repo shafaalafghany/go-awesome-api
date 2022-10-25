@@ -1,9 +1,11 @@
 package main
 
 import (
+	"awesome-api/api"
 	"awesome-api/config"
 	"awesome-api/logger"
 	"awesome-api/store"
+	"context"
 	"database/sql"
 	"fmt"
 	"log"
@@ -17,6 +19,8 @@ func main() {
 		log.Fatal(err)
 		return
 	}
+	ctx := context.Background()
+
 	var zlog zerolog.Logger
 	logConfig := logger.Config{
 		Level:  config.LoggerLevel,
@@ -26,8 +30,11 @@ func main() {
 	if err != nil {
 		log.Fatal(fmt.Errorf("failed to create zerolog console: %w", err))
 	}
+
 	db := setupPg(config, zlog)
-	fmt.Println(db)
+	apiDB := api.DB{
+		ElibraryPostgres: db,
+	}
 }
 
 func setupPg(cfg config.Config, logger zerolog.Logger) *sql.DB {
