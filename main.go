@@ -9,6 +9,7 @@ import (
 	"awesome-api/store"
 	"context"
 	"database/sql"
+	"flag"
 	"fmt"
 	"log"
 	"time"
@@ -17,6 +18,11 @@ import (
 )
 
 func main() {
+	var migrateCMD string
+
+	flag.StringVar(&migrateCMD, "migrate", "up", "migration")
+	flag.Parse()
+
 	config, err := config.LoadConfig(".")
 	if err != nil {
 		log.Fatal(err)
@@ -46,6 +52,13 @@ func main() {
 	apiLogger := zlog.With().
 		Str("component", "api").
 		Logger()
+
+	if migrateCMD != "" {
+		err = store.Migrate(db, migrateCMD)
+		if err != nil {
+			zlog.Fatal().Err(err).Msg("failed migration")
+		}
+	}
 
 	srv := api.NewServer(
 		fmt.Sprintf("%s:%d", config.AppHost, config.AppPort),
