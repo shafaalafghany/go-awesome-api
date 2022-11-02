@@ -2,6 +2,7 @@ package api
 
 import (
 	"awesome-api/api/handler/auth"
+	"awesome-api/jwt"
 	mailer "awesome-api/mail"
 	"awesome-api/store"
 	"awesome-api/store/postgresql"
@@ -21,6 +22,7 @@ type Server struct {
 	stores            *stores
 	tokenVerification TokenVerificationConfig
 	mailer            mailer.EmailSender
+	jwt               jwt.JWT
 }
 
 type DB struct {
@@ -41,12 +43,14 @@ func NewServer(
 	db DB,
 	tokenVerification TokenVerificationConfig,
 	mailer mailer.EmailSender,
+	jwt jwt.JWT,
 ) *Server {
 	s := &Server{
 		Addr:              addr,
 		logger:            logger,
 		tokenVerification: tokenVerification,
 		mailer:            mailer,
+		jwt:               jwt,
 	}
 	var err error
 	s.stores, err = initStores(s, db)
@@ -90,6 +94,11 @@ func handlers(s *Server) http.Handler {
 		s.stores.userStore,
 		s.tokenVerification.Expiry,
 		s.mailer,
+	))
+	h.Post("/auth/signin", auth.Signin(
+		s.logger,
+		s.stores.userStore,
+		s.jwt,
 	))
 	return h
 }

@@ -3,6 +3,7 @@ package main
 import (
 	"awesome-api/api"
 	"awesome-api/config"
+	"awesome-api/jwt"
 	"awesome-api/logger"
 	mailer "awesome-api/mail"
 	"awesome-api/store"
@@ -38,6 +39,7 @@ func main() {
 		ElibraryPostgres: db,
 	}
 	mailer := setupMail(config)
+	jwt := setupJWT(config)
 	tokenVerification := api.TokenVerificationConfig{
 		Expiry: time.Duration(config.TokenVerificationExpirationMinute),
 	}
@@ -51,6 +53,7 @@ func main() {
 		apiDB,
 		tokenVerification,
 		mailer,
+		jwt,
 	)
 	srv.Run(ctx)
 }
@@ -78,4 +81,12 @@ func setupMail(cfg config.Config) mailer.EmailSender {
 		MailPassword: cfg.MailPassword,
 	}
 	return mailer.NewMail(mailerConfig)
+}
+
+func setupJWT(cfg config.Config) jwt.JWT {
+	jwtCfg := jwt.JWTConfig{
+		TokenAccessExpiration:  time.Duration(cfg.TokenAccessExpirationMinute),
+		TokenRefreshExpiration: time.Duration(cfg.TokenRefreshExpirationMinute),
+	}
+	return jwt.NewJWT(jwtCfg)
 }

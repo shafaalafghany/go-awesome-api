@@ -16,8 +16,10 @@ type UserStore struct {
 }
 
 type userPrepareStatement struct {
-	Insert         *sql.Stmt
-	FindOneByEmail *sql.Stmt
+	Insert                   *sql.Stmt
+	FindOneByEmail           *sql.Stmt
+	FindOneCredentialByEmail *sql.Stmt
+	UpdateTokenIdById        *sql.Stmt
 }
 
 func (us *UserStore) prepareStatement() error {
@@ -27,6 +29,12 @@ func (us *UserStore) prepareStatement() error {
 		return err
 	}
 	if us.ps.FindOneByEmail, err = prepareStatement(us.db, storeName, "FindOneByEmail", userFindOneByEmail); err != nil {
+		return err
+	}
+	if us.ps.FindOneCredentialByEmail, err = prepareStatement(us.db, storeName, "FindOneCredentialByEmail", userFindOneCredentialByEmail); err != nil {
+		return err
+	}
+	if us.ps.UpdateTokenIdById, err = prepareStatement(us.db, storeName, "UpdateTokenIdById", userUpdateTokenId); err != nil {
 		return err
 	}
 	return nil
@@ -75,6 +83,39 @@ func (us *UserStore) Insert(ctx context.Context, usr *store.UserRegister) error 
 	)
 	if err != nil {
 		return fmt.Errorf("failed to Insert: %w", err)
+	}
+	return nil
+}
+
+const userFindOneCredentialByEmail = `
+SELECT id, email, password, is_verified
+FROM "users"
+WHERE email = $1
+`
+
+func (us *UserStore) FindOneCredentialByEmail(ctx context.Context, email string) (*store.User, error) {
+	row := us.ps.FindOneCredentialByEmail.QueryRowContext(ctx, email)
+	user := &store.User{}
+	err := row.Scan(
+		&user.ID, &user.Email, &user.Password,
+		&user.IsVerified,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to scan: %w", err)
+	}
+	return user, nil
+}
+
+const userUpdateTokenId = `
+UPDATE "users" SET
+token_id = $1
+WHERE id = $2
+`
+
+func (us *UserStore) UpdateTokenIdById(ctx context.Context, token string, id int) error {
+	_, err := us.ps.UpdateTokenIdById.ExecContext(ctx, token, id)
+	if err != nil {
+		return fmt.Errorf("failed to UpdateTokenIdById: %w", err)
 	}
 	return nil
 }
