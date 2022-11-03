@@ -9,6 +9,10 @@ import (
 	"unicode"
 )
 
+type AuthResponse struct {
+	Message string `json:"message"`
+}
+
 func ValidateEmail(email string) error {
 	if strings.TrimSpace(email) == "" {
 		return fmt.Errorf("email cannot be empty")
@@ -95,4 +99,11 @@ func RandString(n int) (string, error) {
 		generatedString[i] = letter[num.Int64()]
 	}
 	return string(generatedString), nil
+}
+
+func ValidateToken(token string) error {
+	if strings.TrimSpace(token) == "" {
+		return fmt.Errorf("token cannot be empty")
+	}
+	return nil
 }

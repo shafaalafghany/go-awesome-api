@@ -26,10 +26,6 @@ type SignUpRequest struct {
 	TokenExpiration   string `json:"token_expiration"`
 }
 
-type SignUpResponse struct {
-	Message string `json:"message"`
-}
-
 const accountStatus = false
 
 func (sr *SignUpRequest) validateRequest() *apierror.UnprocessableEntity {
@@ -116,7 +112,7 @@ func Signup(
 			return
 		}
 		go mailer.SendActivationLink(user.ID, req.Email, user.TokenVerification.String)
-		res := SignUpResponse{
+		res := AuthResponse{
 			Message: "email activation has been sent, please check your email",
 		}
 		response.GenerateResponse(w, http.StatusCreated, res)

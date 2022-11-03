@@ -100,5 +100,10 @@ func handlers(s *Server) http.Handler {
 		s.stores.userStore,
 		s.jwt,
 	))
+	h.Post("/auth/signout", auth.Signout(
+		s.logger,
+		s.stores.userStore,
+		s.jwt,
+	))
 	return h
 }

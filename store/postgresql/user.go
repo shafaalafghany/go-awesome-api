@@ -17,9 +17,11 @@ type UserStore struct {
 
 type userPrepareStatement struct {
 	Insert                   *sql.Stmt
+	FindOneById              *sql.Stmt
 	FindOneByEmail           *sql.Stmt
 	FindOneCredentialByEmail *sql.Stmt
 	UpdateTokenIdById        *sql.Stmt
+	DeleteTokenIdById        *sql.Stmt
 }
 
 func (us *UserStore) prepareStatement() error {
@@ -35,6 +37,12 @@ func (us *UserStore) prepareStatement() error {
 		return err
 	}
 	if us.ps.UpdateTokenIdById, err = prepareStatement(us.db, storeName, "UpdateTokenIdById", userUpdateTokenId); err != nil {
+		return err
+	}
+	if us.ps.FindOneById, err = prepareStatement(us.db, storeName, "FindOneById", userFindOneById); err != nil {
+		return err
+	}
+	if us.ps.DeleteTokenIdById, err = prepareStatement(us.db, storeName, "DeleteTokenIdById", userDeleteTokenIdById); err != nil {
 		return err
 	}
 	return nil
@@ -63,6 +71,13 @@ const userFindOneByEmail = userFindOneBase + "WHERE email = $1"
 
 func (us *UserStore) FindOneByEmail(ctx context.Context, email string) (*store.User, error) {
 	row := us.ps.FindOneByEmail.QueryRowContext(ctx, email)
+	return us.scanRow(row)
+}
+
+const userFindOneById = userFindOneBase + "WHERE id = $1"
+
+func (us *UserStore) FindOneById(ctx context.Context, id int) (*store.User, error) {
+	row := us.ps.FindOneById.QueryRowContext(ctx, id)
 	return us.scanRow(row)
 }
 
@@ -116,6 +131,20 @@ func (us *UserStore) UpdateTokenIdById(ctx context.Context, token string, id int
 	_, err := us.ps.UpdateTokenIdById.ExecContext(ctx, token, id)
 	if err != nil {
 		return fmt.Errorf("failed to UpdateTokenIdById: %w", err)
+	}
+	return nil
+}
+
+const userDeleteTokenIdById = `
+UPDATE "users" SET
+token_id = NULL
+WHERE id = $1
+`
+
+func (us *UserStore) DeleteTokenIdById(ctx context.Context, id int) error {
+	_, err := us.ps.DeleteTokenIdById.ExecContext(ctx, id)
+	if err != nil {
+		return fmt.Errorf("failed to DeleteTokenIdById: %w", err)
 	}
 	return nil
 }

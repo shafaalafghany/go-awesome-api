@@ -27,7 +27,9 @@ type UserRegister struct {
 
 type UserStore interface {
 	Insert(ctx context.Context, usr *UserRegister) error
+	FindOneById(ctx context.Context, id int) (*User, error)
 	FindOneByEmail(ctx context.Context, email string) (*User, error)
 	FindOneCredentialByEmail(ctx context.Context, email string) (*User, error)
 	UpdateTokenIdById(ctx context.Context, token string, id int) error
+	DeleteTokenIdById(ctx context.Context, id int) error
 }
