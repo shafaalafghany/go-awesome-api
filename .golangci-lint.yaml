@@ -1,0 +1,7 @@
+run:
+  default: 5m
+  tests: true
+linters-settings:
+  funlen: 0
+  statements: 100
+  lll: 150

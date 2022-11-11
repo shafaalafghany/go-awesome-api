@@ -1,0 +1,54 @@
+version: '3.8'
+services:
+  awesome-api:
+    container_name: awesome-api
+    image: golang:1.19
+    restart: on-failure:5
+    volumes:
+      - ./:/awesome-api
+    working_dir: /awesome-api
+    command: 
+    - /bin/bash
+    - -c
+    - go run ./main.go -migrate up
+    ports:
+      - "3000:3000/tcp"
+    env_file:
+      - ./.env
+    networks:
+      default:
+        aliases:
+          - awesome-api
+    depends_on:
+      - awesome-db
+  awesome-db:
+    container_name: postgres-db
+    image: postgres:14-alpine
+    restart: on-failure:5
+    volumes:
+      - ./data/pgsql:/var/lib/postgresql/data
+    ports:
+      - "3002:5432/tcp"
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_DB=elibrary
+      - PGPORT=5432
+    networks:
+      default:
+        aliases:
+          - awesome-db
+  adminer:
+    container_name: adminer
+    image: adminer:4.8.1-standalone
+    restart: on-failure:5
+    ports:
+      - "3001:8080/tcp"
+    environment:
+      - "ADMINER_DEFAULT_SERVER=awesome-db"
+    networks:
+      default:
+        aliases:
+          - adminer
+networks:
+  default:
